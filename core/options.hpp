@@ -174,6 +174,9 @@ struct Options
 	std::string hdr;
 	TimeVal<std::chrono::microseconds> flicker_period;
 	bool no_raw;
+    //for Using pigpio Send Trigger after receiving frame
+    bool enable_gpio;
+    uint32_t gpio_pin;
 
 	virtual bool Parse(int argc, char *argv[]);
 	virtual void Print() const;

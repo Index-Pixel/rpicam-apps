@@ -773,6 +773,27 @@ void RPiCamApp::StartCamera()
 			throw std::runtime_error("Failed to queue request");
 	}
 
+    // For libgpio
+    msg_queue_.enable_gpio = options_->enable_gpio;
+    if(msg_queue_.enable_gpio)
+    {
+        gpio_pin = options_->gpio_pin;
+        chip = gpiod_chip_open_by_name(chipname);
+        if (!chip) {
+            throw std::runtime_error("Failed to open GPIO chip");
+        }
+        msg_queue_.line = gpiod_chip_get_line(chip, gpio_pin);
+        if (!msg_queue_.line) {
+            gpiod_chip_close(chip);
+            throw std::runtime_error("Failed to get GPIO line");
+        }
+        if (gpiod_line_request_output(msg_queue_.line, "gpio_control", 0) < 0) {
+            gpiod_chip_close(chip);
+            throw std::runtime_error("Failed to request GPIO line as output");
+        }
+        gpiod_line_set_value(msg_queue_.line, 0);
+    }
+
 	LOG(2, "Camera started!");
 }
 
@@ -805,7 +826,14 @@ void RPiCamApp::StopCamera()
 
 	controls_.clear(); // no need for mutex here
 
-	if (!options_->help)
+    // For libgpio
+    if(msg_queue_.enable_gpio){
+        gpiod_line_set_value(msg_queue_.line, 0);
+        gpiod_line_release(msg_queue_.line);
+        gpiod_chip_close(chip);
+    }
+
+    if (!options_->help)
 		LOG(2, "Camera stopped!");
 }
 

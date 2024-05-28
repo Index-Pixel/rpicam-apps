@@ -36,6 +36,9 @@
 #include "core/post_processor.hpp"
 #include "core/stream_info.hpp"
 
+// for GPIO
+#include <gpiod.h>
+
 struct Options;
 class Preview;
 struct Mode;
@@ -195,6 +198,9 @@ private:
 	class MessageQueue
 	{
 	public:
+        // For libgpio:
+        bool enable_gpio = false;
+        struct gpiod_line *line;
 		template <typename U>
 		void Post(U &&msg)
 		{
@@ -206,6 +212,8 @@ private:
 		{
 			std::unique_lock<std::mutex> lock(mutex_);
 			cond_.wait(lock, [this] { return !queue_.empty(); });
+            if (enable_gpio)
+                triggerEvent();
 			T msg = std::move(queue_.front());
 			queue_.pop();
 			return msg;
@@ -220,6 +228,14 @@ private:
 		std::queue<T> queue_;
 		std::mutex mutex_;
 		std::condition_variable cond_;
+
+        // For libgpio
+        bool gpio_output_state = false;
+        void triggerEvent()
+        {
+            gpio_output_state = !gpio_output_state;
+            gpiod_line_set_value(line, gpio_output_state ? 1 : 0);
+        }
 	};
 	struct PreviewItem
 	{
@@ -281,4 +297,8 @@ private:
 	uint64_t last_timestamp_;
 	uint64_t sequence_ = 0;
 	PostProcessor post_processor_;
+    // For libgpio
+    const char *chipname = "gpiochip4";
+    struct gpiod_chip *chip;
+    uint32_t gpio_pin = 5;
 };

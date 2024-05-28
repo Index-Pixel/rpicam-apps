@@ -290,6 +290,10 @@ Options::Options()
 			"Manual flicker correction period"
 			"\nSet to 10000us to cancel 50Hz flicker."
 			"\nSet to 8333us to cancel 60Hz flicker.\n")
+		("enableGpio", value<bool>(&enable_gpio)->default_value(false),
+			"Enable Gpio functionality")
+		("gpio_pin", value<uint32_t>(&gpio_pin)->default_value(5),
+			"Sets the GPIO Pin to use for the Trigger signal. Default 5.")
 		;
 	// clang-format on
 
@@ -696,4 +700,7 @@ void Options::Print() const
 		std::cerr << "    viewfinder-buffer-count: " << viewfinder_buffer_count << std::endl;
 	std::cerr << "    metadata: " << metadata << std::endl;
 	std::cerr << "    metadata-format: " << metadata_format << std::endl;
+    // For libgpio
+    std::cerr << "    Using GPIO: " << enable_gpio << std::endl;
+    std::cerr << "    Using GPIO-Pin: " << gpio_pin << std::endl;
 }

@@ -1,7 +1,10 @@
 boost_dep = dependency('boost', modules : ['program_options'], required : true)
 thread_dep = dependency('threads', required : true)
 
-rpicam_app_dep += [boost_dep, thread_dep]
+# For libgpio
+libgpiod = meson.get_compiler('c').find_library('gpiod', has_headers: ['gpiod.h'], required: true)
+
+rpicam_app_dep += [boost_dep, thread_dep, libgpiod]
 
 rpicam_app_src += files([
     'buffer_sync.cpp',
